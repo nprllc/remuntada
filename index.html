@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8">
-<!--build:202611141505-->
-<script>window.BUILD='202611141505';</script>
+<!--build:202611141601-->
+<script>window.BUILD='202611141601';</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -80,10 +80,13 @@ window.SPR={"david":{"img":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAACgAAAA
   window.ctx = ctx; window.canvas = cv;
   function fit() {
     // remplit toute la fenêtre en gardant le 16:9 (échelle entière seulement si elle tombe à moins de 4 % du bord)
-    const s = Math.min(window.innerWidth / W, window.innerHeight / H);
+    // (sur téléphone, window.GUTTER réserve de chaque côté la place de la manette et des boutons tactiles)
+    const gw = window.GUTTER || 0;
+    const s = Math.min((window.innerWidth - 2 * gw) / W, window.innerHeight / H);
     const k = (s >= 1 && s - Math.floor(s) < 0.04 * s) ? Math.floor(s) : s;
     cv.style.width = Math.round(W * k) + 'px'; cv.style.height = Math.round(H * k) + 'px';
   }
+  window.fitCanvas = fit;
   window.addEventListener('resize', fit); fit();
   document.addEventListener('fullscreenchange', fit); document.addEventListener('webkitfullscreenchange', fit);
   // plein écran : touche F partout (sauf pendant une réassignation de touche), ou via OPCIONES
@@ -4780,19 +4783,28 @@ const Dialog = (function () {
     '#tc.on{display:block}',
     '#tc .play{opacity:0;transition:opacity .18s;visibility:hidden}',
     '#tc.play .play{opacity:1;visibility:visible}',
+    // Disposition « console portable » : la manette à gauche, les boutons à droite, dans les bandes de chaque côté du jeu
+    // (classe .side : le jeu est un peu réduit pour qu'ils ne recouvrent rien). Quand l'écran est trop étroit pour cela
+    // (classe .ov : tablette, vieux téléphone 16:9), ils restent sur l'image mais presque transparents.
+    // Aucune marge « safe-area » sur les côtés : la colonne du bord évite d'elle-même la zone de l'encoche (34 à 66 % de la hauteur).
+    '#tc{--fa:.5;--ba:.8;--la:1;--ka:.9}',
+    '#tc.ov{--fa:.2;--ba:.5;--la:.8;--ka:.55}',
     '#tcz{position:absolute;left:0;top:16%;bottom:0;width:46%;pointer-events:auto;touch-action:none}',
-    '#tcb{position:absolute;width:calc(30*var(--u));height:calc(30*var(--u));left:calc(7*var(--u) + env(safe-area-inset-left,0px));bottom:calc(9*var(--u) + env(safe-area-inset-bottom,0px));border-radius:50%;box-sizing:border-box;border:calc(.7*var(--u)) solid rgba(255,255,255,.55);background:radial-gradient(circle,rgba(20,28,68,.28) 0,rgba(20,28,68,.5) 100%);pointer-events:none}',
-    '#tcb:before,#tcb:after{content:"";position:absolute;left:50%;top:50%;background:rgba(255,255,255,.28);transform:translate(-50%,-50%)}',
-    '#tcb:before{width:62%;height:calc(.6*var(--u))}#tcb:after{height:62%;width:calc(.6*var(--u))}',
-    '#tck{position:absolute;width:calc(13*var(--u));height:calc(13*var(--u));left:50%;top:50%;margin:calc(-6.5*var(--u)) 0 0 calc(-6.5*var(--u));border-radius:50%;box-sizing:border-box;background:linear-gradient(90deg,#a50044 0,#a50044 50%,#004d98 50%,#004d98 100%);border:calc(.7*var(--u)) solid #ffd23f;box-shadow:0 calc(.6*var(--u)) 0 rgba(0,0,0,.45);opacity:.9;z-index:1}',
-    '#tc .b{position:absolute;display:flex;align-items:center;justify-content:center;border-radius:50%;box-sizing:border-box;border:calc(.7*var(--u)) solid rgba(255,255,255,.85);color:#fff;text-shadow:0 calc(.35*var(--u)) 0 #1a1420;font-size:calc(5.4*var(--u));line-height:1;letter-spacing:0;pointer-events:auto;touch-action:none;box-shadow:0 calc(.8*var(--u)) 0 rgba(0,0,0,.4);width:calc(19*var(--u));height:calc(19*var(--u))}',
-    '#tc .b.dn{transform:translateY(calc(.6*var(--u))) scale(.94);box-shadow:none;filter:brightness(1.35)}',
-    '#tc .punch{background:rgba(165,0,68,.62);width:calc(23*var(--u));height:calc(23*var(--u));right:calc(5*var(--u) + env(safe-area-inset-right,0px));bottom:calc(6*var(--u) + env(safe-area-inset-bottom,0px));font-size:calc(7*var(--u))}',
-    '#tc .jump{background:rgba(0,77,152,.62);right:calc(31*var(--u) + env(safe-area-inset-right,0px));bottom:calc(4*var(--u) + env(safe-area-inset-bottom,0px))}',
-    '#tc .kick{background:rgba(0,77,152,.62);right:calc(24*var(--u) + env(safe-area-inset-right,0px));bottom:calc(27*var(--u) + env(safe-area-inset-bottom,0px))}',
-    '#tc .ball{background:rgba(165,0,68,.62);right:calc(3*var(--u) + env(safe-area-inset-right,0px));bottom:calc(33*var(--u) + env(safe-area-inset-bottom,0px))}',
-    '#tc .ally{border-radius:calc(4*var(--u));width:calc(24*var(--u));height:calc(9.5*var(--u));right:calc(3*var(--u) + env(safe-area-inset-right,0px));bottom:calc(56*var(--u) + env(safe-area-inset-bottom,0px));background:rgba(255,210,63,.72);color:#1a1420;text-shadow:none;border-color:#fff}',
-    '#tc .pause{border-radius:calc(2.5*var(--u));width:calc(11*var(--u));height:calc(10*var(--u));right:calc(3*var(--u) + env(safe-area-inset-right,0px));top:calc(3*var(--u) + env(safe-area-inset-top,0px));background:rgba(20,28,68,.6);font-family:pxb,monospace;font-size:calc(3.4*var(--u))}',
+    '#tcb{position:absolute;width:calc(24*var(--u));height:calc(24*var(--u));left:calc(3*var(--u));bottom:calc(10*var(--u));border-radius:50%;box-sizing:border-box;border:calc(.45*var(--u)) solid rgba(255,255,255,var(--ba));background:rgba(20,28,68,var(--fa));pointer-events:none}',
+    '#tcb.fl{border-color:rgba(255,255,255,.42);background:rgba(20,28,68,.16)}',
+    '#tcb:before,#tcb:after{content:"";position:absolute;left:50%;top:50%;background:rgba(255,255,255,.22);transform:translate(-50%,-50%)}',
+    '#tcb:before{width:62%;height:calc(.45*var(--u))}#tcb:after{height:62%;width:calc(.45*var(--u))}',
+    '#tck{position:absolute;width:calc(11*var(--u));height:calc(11*var(--u));left:50%;top:50%;margin:calc(-5.5*var(--u)) 0 0 calc(-5.5*var(--u));border-radius:50%;box-sizing:border-box;background:linear-gradient(90deg,#a50044 0,#a50044 50%,#004d98 50%,#004d98 100%);border:calc(.5*var(--u)) solid #ffd23f;opacity:var(--ka);z-index:1}',
+    '#tcb.fl #tck{opacity:.6}',
+    '#tc .b{position:absolute;display:flex;align-items:center;justify-content:center;border-radius:50%;box-sizing:border-box;border:calc(.45*var(--u)) solid rgba(255,255,255,var(--ba));color:rgba(255,255,255,var(--la));text-shadow:0 calc(.3*var(--u)) 0 rgba(26,20,32,var(--la));font-size:calc(3.9*var(--u));line-height:1;letter-spacing:0;pointer-events:auto;touch-action:none;width:calc(14*var(--u));height:calc(14*var(--u))}',
+    '#tc .b.dn{transform:scale(.93);filter:brightness(1.3);--fa:.8;--ba:1;--la:1}',
+    '#tc .punch{background:rgba(165,0,68,var(--fa));width:calc(15*var(--u));height:calc(15*var(--u));right:calc(1.5*var(--u));bottom:calc(10*var(--u));font-size:calc(4.6*var(--u))}',
+    '#tc .jump{background:rgba(0,77,152,var(--fa));right:calc(14.5*var(--u));bottom:calc(2*var(--u))}',
+    '#tc .kick{background:rgba(0,77,152,var(--fa));right:calc(14.5*var(--u));bottom:calc(19*var(--u))}',
+    '#tc .ball{background:rgba(165,0,68,var(--fa));right:calc(14.5*var(--u));bottom:calc(35*var(--u))}',
+    '#tc .ally{background:rgba(255,210,63,calc(var(--fa) + .12));right:calc(14.5*var(--u));bottom:calc(51*var(--u));color:rgba(26,20,32,var(--la));text-shadow:none;font-size:calc(3.6*var(--u))}',
+    '#tc.ov .ally{color:rgba(255,255,255,var(--la));text-shadow:0 calc(.3*var(--u)) 0 rgba(26,20,32,var(--la))}',
+    '#tc .pause{border-radius:calc(2.2*var(--u));width:calc(10*var(--u));height:calc(9*var(--u));right:calc(3*var(--u));top:calc(3*var(--u));background:rgba(20,28,68,var(--fa));font-family:pxb,monospace;font-size:calc(3*var(--u))}',
     '#rot{position:fixed;left:0;top:0;right:0;bottom:0;z-index:9;display:none;flex-direction:column;align-items:center;justify-content:center;font-family:px,monospace;color:#ffd23f;text-align:center;background:repeating-linear-gradient(90deg,#7d0034 0,#7d0034 14.2857%,#063a75 14.2857%,#063a75 28.5714%)}',
     '#rot.on{display:flex}',
     'html.tu,html.tu body{background:#05060f}',
@@ -4819,7 +4831,7 @@ const Dialog = (function () {
     if (len > R * 0.26) { const cx = dx / len, cy = dy / len; if (cx > 0.38) r = true; if (cx < -0.38) l = true; if (cy > 0.38) dn = true; if (cy < -0.38) u = true; }
     f.left = l; f.right = r; f.up = u; f.down = dn;
   }
-  function stickHome() { base.style.left = ''; base.style.top = ''; base.style.bottom = ''; knob.style.transform = ''; base.style.opacity = ''; }
+  function stickHome() { base.style.left = ''; base.style.top = ''; base.style.bottom = ''; knob.style.transform = ''; base.classList.remove('fl'); }
   function stickMove(x, y) {
     const R = base.offsetWidth / 2; let dx = x - sx0, dy = y - sy0; const len = Math.sqrt(dx * dx + dy * dy), m = R * 0.78;
     if (len > m) { dx = dx / len * m; dy = dy / len * m; }
@@ -4847,7 +4859,10 @@ const Dialog = (function () {
     zone.addEventListener('touchstart', function (e) {
       eat(e); if (stickId !== null) return;
       const t = e.changedTouches[0]; stickId = t.identifier; sx0 = t.clientX; sy0 = t.clientY;
-      const R = base.offsetWidth / 2; base.style.left = Math.round(Math.max(4, sx0 - R)) + 'px'; base.style.top = Math.round(sy0 - R) + 'px'; base.style.bottom = 'auto'; base.style.opacity = '1';
+      const R = base.offsetWidth / 2; base.style.left = Math.round(Math.max(4, sx0 - R)) + 'px'; base.style.top = Math.round(sy0 - R) + 'px'; base.style.bottom = 'auto';
+      // posée sur l'image du jeu (hors de la bande) : presque transparente
+      let over = true; try { over = sx0 + R > canvas.getBoundingClientRect().left; } catch (e2) {}
+      base.classList.toggle('fl', over);
       stickMove(sx0, sy0);
     }, { passive: false });
     zone.addEventListener('touchmove', function (e) { eat(e); for (let i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === stickId) stickMove(e.changedTouches[i].clientX, e.changedTouches[i].clientY); }, { passive: false });
@@ -4897,8 +4912,16 @@ const Dialog = (function () {
     if (!TU.on) return;
     const w = window.innerWidth, h = window.innerHeight, portrait = h > w * 1.05;
     rot.classList.toggle('on', portrait); window.HOLD = portrait;
-    // unité des boutons : 1 % de la hauteur, plafonnée pour les tablettes (boutons de 2 cm au plus)
-    root.style.setProperty('--u', Math.min(h / 100, 4.6) + 'px');
+    // unité des boutons : 1 % de la hauteur, plafonnée pour les tablettes
+    const u = Math.min(h / 100, 4.6);
+    root.style.setProperty('--u', u + 'px');
+    // bandes latérales : 29,5 u de chaque côté pour la manette et les boutons, si le jeu n'y perd pas plus de 16 % de sa taille
+    // (tous les téléphones récents, très allongés) ; sinon, ou avec une manette Bluetooth, le jeu garde toute la place
+    const need = 29.5 * u, full = Math.min(w / 480, h / 270), gs = Math.min((w - 2 * need) / 480, h / 270);
+    const side = !portrait && !TU.pad && gs >= 0.84 * full;
+    root.classList.toggle('ov', !side); root.classList.toggle('side', side);
+    const g = side ? Math.round(need) : 0;
+    if (window.GUTTER !== g) { window.GUTTER = g; try { window.fitCanvas(); } catch (e) {} }
     if (portrait && stickId !== null) stickEnd();
   }
 
@@ -4914,7 +4937,10 @@ const Dialog = (function () {
     requestAnimationFrame(tick);
     if (!TU.on || !root) return;
     let play = false;
-    try { play = G.scene === 'play' && !G.paused && !(typeof Dialog !== 'undefined' && Dialog.active) && G.phase !== 'continue' && G.phase !== 'gameover' && G.phase !== 'clear' && G.phase !== 'messi' && !window.HOLD; } catch (e) {}
+    // manette Bluetooth branchée : plus de boutons tactiles, et le jeu reprend toute la place
+    let pad = false; try { pad = !!Input.padConnected; } catch (e) {}
+    if (pad !== !!TU.pad) { TU.pad = pad; layout(); }
+    try { play = !pad && G.scene === 'play' && !G.paused && !(typeof Dialog !== 'undefined' && Dialog.active) && G.phase !== 'continue' && G.phase !== 'gameover' && G.phase !== 'clear' && G.phase !== 'messi' && !window.HOLD; } catch (e) {}
     if (ins && !ins.dead) { let ti = false; try { ti = G.scene === 'title' && !window.HOLD; } catch (e) {} if (ti !== ins.shown) { ins.shown = ti; ins.classList.toggle('on', ti); } }
     if (play !== TU.play) {
       TU.play = play; root.classList.toggle('play', play);
