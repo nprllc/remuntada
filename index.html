@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8">
+<!--build:202611141505-->
+<script>window.BUILD='202611141505';</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3390,6 +3392,8 @@ const Dialog = (function () {
       }
       c.fillStyle = 'rgba(8,8,28,0.72)'; c.fillRect(0, 246, W, 24);
       U.text(c, U.fmt(T.ui.menuHelp), 240, 250, { align: 'center', color: '#ffffff', outline: null });
+      // numéro de publication (pour vérifier d'un coup d'œil qu'on a bien la dernière version)
+      if (window.BUILD && window.BUILD.length >= 12) { const b = window.BUILD, vs = 'V' + b.slice(6, 8) + '.' + b.slice(4, 6) + ' ' + b.slice(8, 10) + ':' + b.slice(10, 12), vw = U.tw(vs, 8, 'pxs'); c.fillStyle = 'rgba(8,8,28,0.72)'; c.fillRect(476 - vw - 3, 234, vw + 7, 12); U.text(c, vs, 477, 237, { size: 8, font: 'pxs', align: 'right', color: '#c9d0ff', outline: null }); }
       if (t < 0.4) U.fade(c, 1 - t / 0.4);
       if (this.leave) U.fade(c, this.leave / 0.4);
     }
@@ -4935,7 +4939,18 @@ const Dialog = (function () {
     // application installée : manifeste et cache hors ligne quand le jeu est servi par un site (pas en fichier local)
     try {
       if (/^https?:$/.test(location.protocol)) {
-        if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(function () {});
+        if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+          // mise à jour automatique : à chaque ouverture (et à chaque retour dans l'app) on demande s'il y a une nouvelle
+          // publication ; quand elle est installée, le jeu se recharge tout seul
+          var sw = navigator.serviceWorker, had = !!sw.controller, done = false;
+          var reload = function () { if (done) return; done = true; try { location.reload(); } catch (e) {} };
+          sw.addEventListener('controllerchange', function () { if (had) reload(); });
+          sw.addEventListener('message', function (e) { if (e.data && e.data.type === 'remuntada-update' && e.data.v !== window.BUILD) reload(); });
+          sw.register('sw.js', { updateViaCache: 'none' }).then(function (reg) {
+            var chk = function () { try { var q = reg.update(); if (q && q.catch) q.catch(function () {}); } catch (e) {} };
+            chk(); d.addEventListener('visibilitychange', function () { if (!d.hidden) chk(); });
+          }).catch(function () {});
+        }
       }
     } catch (e) {}
   }
