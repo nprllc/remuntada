@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8">
-<!--build:202611141706-->
-<script>window.BUILD='202611141706';</script>
+<!--build:202611141724-->
+<script>window.BUILD='202611141724';</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -731,6 +731,8 @@ const TEXTS = {
     { who:'david', text:'Por ti cruzaría Madrid mil veces, mi amor.' },
     { who:'marta', text:'Vamos, volvamos a Mallorca: ¡los invitados esperan, y la tarta también!' }
   ],
+  // Marta anima a David antes del balonazo a la jaula (Nicolas, 14/11 : « vas-y mon amour t'es le meilleur ! »)
+  endingCheer: { who:'marta', text:'¡Dale, mi amor! ¡Eres el mejor!' },
   boda: [
     { who:'narr', text:'De vuelta en Mallorca, la boda se reanuda frente a la villa. Y quien oficia la ceremonia es... ¡Leo Messi!' },
     { who:'messi', text:'¿Qué mirás, bobo?' },
@@ -781,6 +783,7 @@ const TEXTS = {
     remap:'CAMBIAR LAS TECLAS', reset:'RESTABLECER TECLAS', pressKey:'pulsa una tecla…',
     swapped:'Intercambiada con «{a}».', resetDone:'Teclas restablecidas.', escCancel:'ESC para cancelar',
     keyboard:'TECLADO', gamepad:'MANDO', gamepadOn:'Mando conectado', gamepadOff:'Sin mando',
+    shoot:'{ball}: ¡TIRA EL BALÓN!', shootTouch:'¡TOCA PARA TIRAR EL BALÓN!',
     skip:'SALTAR', holdSkip:'Mantén {start} para saltar', next:'{punch}: seguir',
     level:'NIVEL', ready:'¡VAMOS!', copyright:'Un regalo de cumpleaños · 35 años',
     fin:'FIN', thanks:'¡GRACIAS POR JUGAR!', toTitle:'{start}: volver al inicio'
@@ -1170,17 +1173,6 @@ const TEXTS = {
         const sx = e.x - camX, sy = FLOOR_Y0 + e.z - (e.h || 0) - (e.tall || 96);
         this.bubbleBox(c, b.text, sx, sy, b.kind, e.face > 0 ? 4 : -8, placed);
       }
-    },
-    // palanca dorada sobre el reposabrazos del trono (nivel 5) : k = 0 (hacia la izquierda) .. 1 (accionada, hacia la derecha)
-    lever(c, sx, sy, k) {
-      sx = Math.round(sx); sy = Math.round(sy); const a = (-0.62 + 1.24 * U.clamp(k || 0, 0, 1)), L = 13;
-      c.fillStyle = '#1a1420'; c.fillRect(sx - 6, sy - 5, 12, 6); c.fillStyle = '#e0a820'; c.fillRect(sx - 5, sy - 4, 10, 4); c.fillStyle = '#fff0a0'; c.fillRect(sx - 5, sy - 4, 10, 1); c.fillStyle = '#1a1420'; c.fillRect(sx - 2, sy - 4, 4, 2);
-      for (let i = 0; i <= L; i++) { const x = Math.round(sx + Math.sin(a) * i), y = Math.round(sy - 4 - Math.cos(a) * i); c.fillStyle = '#1a1420'; c.fillRect(x - 2, y - 1, 4, 3); }
-      for (let i = 0; i <= L; i++) { const x = Math.round(sx + Math.sin(a) * i), y = Math.round(sy - 4 - Math.cos(a) * i); c.fillStyle = '#c8ccd8'; c.fillRect(x - 1, y, 2, 1); }
-      const kx = Math.round(sx + Math.sin(a) * (L + 2)), ky = Math.round(sy - 4 - Math.cos(a) * (L + 2));
-      c.fillStyle = '#1a1420'; c.fillRect(kx - 4, ky - 3, 8, 7); c.fillRect(kx - 3, ky - 4, 6, 9);
-      c.fillStyle = k >= 1 ? '#2fbf4a' : '#e02030'; c.fillRect(kx - 3, ky - 2, 6, 5); c.fillRect(kx - 2, ky - 3, 4, 7);
-      c.fillStyle = k >= 1 ? '#b8ffc4' : '#ff9a9a'; c.fillRect(kx - 2, ky - 2, 2, 2);
     },
     // jaula de Marta colgada de su cadena : top = y del borde superior de la jaula ; devuelve nada (dibuja fondo o frente)
     cage(c, sx, top, front) {
@@ -2356,7 +2348,7 @@ const TEXTS = {
     const list = [];
     for (const e of G.ents) { if (e.gone) continue; FX.shadow(c, e.x - cam, FLOOR_Y0 + e.z, e.boss ? 22 : 19, e.h); list.push({ z: e.z, e }); }
     if (G.ally.active) { const a = G.ally.active; FX.shadow(c, a.x - cam, FLOOR_Y0 + a.z, 19, 0); list.push({ z: a.z, e: a }); }
-    if (G.marta) { FX.lever(c, G.width - 240 + 33 - cam, 91, 0); FX.shadow(c, G.marta.x - cam, FLOOR_Y0 + G.marta.z, 18, G.marta.h); list.push({ z: G.marta.z, m: G.marta }); }
+    if (G.marta) { FX.shadow(c, G.marta.x - cam, FLOOR_Y0 + G.marta.z, 18, G.marta.h); list.push({ z: G.marta.z, m: G.marta }); }
     if (G.cut && G.cut.messi) list.push({ z: G.cut.messi.z, e: G.cut.messi });
     for (const pr of G.props) { FX.shadow(c, pr.x - cam, FLOOR_Y0 + pr.z, 15, 0); list.push({ z: pr.z, pr }); }
     for (const it of G.items) { FX.shadow(c, it.x - cam, FLOOR_Y0 + it.z, 9, it.h); list.push({ z: it.z - .5, it }); }
@@ -4249,7 +4241,7 @@ const Dialog = (function () {
       U.music(U.MUSIC.ending);
       if (arg === 'boda') this.act2(); else if (arg === 'boom') this.act1b(); else this.act1();   // 'boda' : on revient de la carte Madrid → Mallorca
     },
-    exit: function () { try { Dialog.active = false; } catch (e) {} },
+    exit: function () { try { Dialog.active = false; } catch (e) {} try { G.waitShot = false; } catch (e) {} this.waitShot = false; },
     act1: function () {
       const S = this.S = new Stage('L5'), E = T.ending, self = this;
       if (!S.hasBg) { S.backdrop = bernBackdrop; S.width = W; S.floor = 186; }
@@ -4258,23 +4250,31 @@ const Dialog = (function () {
       const d = S.add(new Actor('david', cam + 120, 36, false));
       const f = S.add(new Actor('florentino', cam + 262, 30, true)); f.voice = ['florentino']; f.play('fall', 'hold'); f.at = 5;
       const m = S.add(new Actor('marta', cam + 392, 22, true)); m.play('cage'); m.talkOK = false;
-      // La jaula cuelga en alto (como en el combate). David sube al trono, acciona la palanca, la jaula baja y se abre (Nicolas, 14/11).
-      const UP = 56, LX = S.width - 240 + 33, LY = 91, TOPX = S.width - 240 + 8, TOPZ = -40, FOOTZ = 4;
-      this.cage = { x: m.x, y: -UP, vy: 0, open: false, z: m.z }; this.leverT = -1;
+      // La jaula cuelga en alto (como en el combate). Florentino se va, Marta anima a David, el jugador pulsa y David
+      // manda un balonazo a la jaula : baja con su cadena y se abre (Nicolas, 14/11).
+      const UP = 56;
+      this.cage = { x: m.x, y: -UP, vy: 0, open: false, z: m.z, hitT: -1 }; this.ball = null; this.waitShot = false; this.shot = false;
       const cageTop = function (S2) { const k = self.cage; return S2.floor + k.z + 3 - 119 + k.y; };
-      S.under = function (c, S2) { FX.lever(c, LX - S2.cam.x, LY, self.leverT < 0 ? 0 : Math.min(1, (S2.t - self.leverT) / 0.14)); };
+      const sway = function (S2) { const k = self.cage; if (k.hitT < 0) return 0; const t = S2.t - k.hitT; return t > 2.4 ? 0 : Math.round(Math.sin(t * 15) * 5 * Math.exp(-2.2 * t)); };
       S.over = function (c, S2) {
-        const k = self.cage; if (!k || k.y < -260) return;
-        FX.cage(c, k.x - S2.cam.x, cageTop(S2), true);
+        const k = self.cage;
+        if (k && k.y > -260) FX.cage(c, k.x - S2.cam.x + sway(S2), cageTop(S2), true);
+        const b = self.ball; if (b) { const im = FX.art.ball[((b.t * 14) | 0) % 4]; c.drawImage(im, Math.round(b.x - S2.cam.x - im.width / 2), Math.round(b.y - im.height / 2)); }
+        if (self.waitShot && ((S2.t * 2.4) | 0) % 2 === 0) {
+          const s = (window.TouchUI && TouchUI.on) ? T.ui.shootTouch : U.fmt(T.ui.shoot), w = U.tw(s, 8, 'pxb') + 16, x = Math.round(240 - w / 2);
+          c.fillStyle = '#1a1420'; c.fillRect(x - 1, 225, w + 2, 17); c.fillStyle = '#ffd23f'; c.fillRect(x, 226, w, 15); c.fillStyle = '#e89a18'; c.fillRect(x, 239, w, 2);
+          U.text(c, s, 240, 230, { align: 'center', color: '#1a1420', size: 8, font: 'pxb', outline: null });
+        }
       };
       const drawA = S.drawActor.bind(S);
       S.drawActor = function (c, a, spk) {   // barrotes arrière derrière Marta ; Marta suit la cage tant qu'elle est fermée
         const k = self.cage;
-        if (a === m && k && k.y > -260) { if (!k.open) { m.h = -k.y; m.vh = 0; } FX.cage(c, k.x - S.cam.x, cageTop(S), false); }
+        if (a === m && k && k.y > -260) {
+          const off = k.open ? 0 : sway(S); if (!k.open) { m.h = -k.y; m.vh = 0; }
+          FX.cage(c, k.x - S.cam.x + sway(S), cageTop(S), false);
+          const ox = m.x; m.x += off; drawA(c, a, spk); m.x = ox; return;
+        }
         drawA(c, a, spk);
-      };
-      const climb = function (x0, z0, x1, z1, dur) {   // David sube o baja la escalinata (x y z a la vez)
-        return Q.until(function (S2, st) { const q = Math.min(1, st.t / dur); if (!st.on) { st.on = true; d.flip = x1 < x0; d.play('walk'); } d.x = U.lerp(x0, x1, q); d.z = U.lerp(z0, z1, q); if (q >= 1) { d.play('idle'); return true; } return false; });
       };
       S.steps = [
         Q.wait(0.9),
@@ -4283,28 +4283,30 @@ const Dialog = (function () {
         Q.call(function () { d.play('idle'); }),
         Q.say([E[1]], opt),
         Q.call(function () { f.emote('sweat', 1.2); f.z = 12; f.moveTo(cam + W + 140, 210, null, 'walk'); U.sfx('whistle'); d.play('laugh'); }),
-        Q.wait(1.3), Q.call(function () { d.play('idle'); S.remove(f); m.emote('excl', 1); }),
-        // David sube hasta el trono y acciona la palanca
-        Q.call(function () { d.moveTo(TOPX - 14, 120); }), Q.arrive(d),
-        Q.call(function () { self.dz0 = d.z; }),
-        Q.until(function (S2, st) { const q = Math.min(1, st.t / 0.25); d.z = U.lerp(self.dz0, FOOTZ, q); return q >= 1; }),
-        climb(TOPX - 14, FOOTZ, TOPX, TOPZ, 1.0),
-        Q.call(function () { d.flip = false; d.play(U.hasAnim('david', 'jump') ? 'jump' : 'victory', 'idle'); d.hop(175); U.sfx('jump'); }),
-        Q.wait(0.26),
-        Q.call(function () { self.leverT = S.t; U.sfx('heavy'); S.shake(3); S.parts.sparks(LX - S.cam.x, LY - 12, 10, ['#ffffff', '#fff3a0', '#ffd23a'], 90); }),
-        Q.wait(0.6),
-        // la jaula baja con su cadena
+        Q.wait(1.3), Q.call(function () { d.play('idle'); d.flip = false; S.remove(f); }),
+        // Marta anima a David ; el jugador pulsa para tirar
+        Q.say([T.endingCheer], opt),
+        Q.wait(0.3),
+        Q.call(function () { self.waitShot = true; self.shot = false; try { G.waitShot = true; } catch (e) {} }),
+        Q.until(function () { return self.shot; }),
+        Q.call(function () { d.flip = false; d.play(U.hasAnim('david', 'ball') ? 'ball' : 'kick', 'idle'); }),
+        Q.wait(0.12),
+        Q.call(function () { U.sfx('ball'); self.ball = { t: 0, x: d.x + 20, y: S.floor + d.z - 14, x0: d.x + 20, y0: S.floor + d.z - 14, fly: true }; }),
         Q.until(function (S2, st) {
-          const k = self.cage, q = Math.min(1, st.t / 2.1); k.y = -UP * (1 - q);
-          const tick = Math.floor(st.t / 0.22); if (tick !== st.tick) { st.tick = tick; U.sfx('menu'); }
-          if (q >= 1) { k.y = 0; m.h = 0; S.shake(5); U.sfx('land'); S.parts.dust(m.x - S.cam.x - 24, S.floor + m.z + 4, 3, -1); S.parts.dust(m.x - S.cam.x + 24, S.floor + m.z + 4, 3, 1); return true; }
+          const b = self.ball, k = self.cage, q = Math.min(1, st.t / 0.42), x1 = k.x - 6, y1 = cageTop(S2) + 64;
+          b.t = st.t; b.x = U.lerp(b.x0, x1, q); b.y = U.lerp(b.y0, y1, q) - Math.sin(q * Math.PI) * 30;
+          if (q >= 1) { b.fly = false; b.vx = -70; b.vy = -150; b.gy = S2.floor + d.z + 8; b.life = 0; k.hitT = S2.t; S2.shake(6); S2.flashNow(0.5); U.sfx('bighit'); S2.parts.sparks(x1 - S2.cam.x, y1, 22, ['#ffffff', '#fff3a0', '#ffd23a'], 150); m.emote('excl', 0.9); return true; }
           return false;
         }),
-        Q.wait(0.3),
-        climb(TOPX, TOPZ, TOPX - 14, FOOTZ, 0.9),
-        Q.call(function () { self.dz0 = d.z; d.moveTo(cam + 150, 120, function (q) { q.flip = false; }); }),
-        Q.until(function (S2, st) { const q = Math.min(1, st.t / 0.4); d.z = U.lerp(self.dz0, 36, q); return (q >= 1 && d.tx === null) || st.t > 6; }),
-        Q.call(function () { d.flip = false; d.play('idle'); }),
+        Q.wait(0.55),
+        // la jaula baja con su cadena
+        Q.until(function (S2, st) {
+          const k = self.cage, q = Math.min(1, st.t / 1.9); k.y = -UP * (1 - q);
+          const tick = Math.floor(st.t / 0.2); if (tick !== st.tick) { st.tick = tick; U.sfx('menu'); }
+          if (q >= 1) { k.y = 0; m.h = 0; S2.shake(5); U.sfx('land'); S2.parts.dust(m.x - S2.cam.x - 24, S2.floor + m.z + 4, 3, -1); S2.parts.dust(m.x - S2.cam.x + 24, S2.floor + m.z + 4, 3, 1); return true; }
+          return false;
+        }),
+        Q.wait(0.35),
         Q.say([E[2]], opt),
         Q.call(function () {
           self.cage.open = true; self.cage.vy = -40; S.flashNow(0.9); S.shake(7); U.sfx('explode');
@@ -4582,6 +4584,8 @@ const Dialog = (function () {
       if (!this.leaving && this.skip.update(click)) this.finish();
       else if (click && Dialog.active) Dialog.tap();
       if (this.cage && this.cage.open) { this.cage.vy -= 900 / 60; this.cage.y += this.cage.vy / 60; }
+      if (this.waitShot && !this.leaving && (click || U.anyHit() || ['ball', 'punch', 'kick', 'jump', 'start'].some(function (k) { try { return Input.hit(k); } catch (e) { return false; } }))) { this.waitShot = false; this.shot = true; try { G.waitShot = false; } catch (e) {} }
+      const bl = this.ball; if (bl && !bl.fly) { bl.t += 1 / 60; bl.life += 1 / 60; bl.vy += 620 / 60; bl.x += bl.vx / 60; bl.y += bl.vy / 60; if (bl.y >= bl.gy) { bl.y = bl.gy; if (bl.vy > 60) { bl.vy = -bl.vy * 0.45; bl.vx *= 0.7; } else { bl.vy = 0; bl.vx *= 0.94; } } if (bl.life > 3.2) this.ball = null; }
       if (this.heart > 0) this.heart += 1 / 60;
       if (this.party) {
         this.pt += 1 / 60;
