@@ -1,7 +1,7 @@
-// Cache hors ligne + mise à jour automatique. 202611141935 est remplacé par build.py (un numéro par publication).
+// Cache hors ligne + mise à jour automatique. 202611142001 est remplacé par build.py (un numéro par publication).
 // Chaque publication change ce fichier : le navigateur installe alors la nouvelle version, vide l'ancien cache
 // et recharge le jeu tout seul.
-const VERSION = '202611141935', PREFIX = 'remuntada-v2-', CACHE = PREFIX + VERSION;
+const VERSION = '202611142001', PREFIX = 'remuntada-v2-', CACHE = PREFIX + VERSION;
 const EXTRA = ['./manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './icon-180.png'];
 self.addEventListener('install', e => {
   e.waitUntil((async () => {

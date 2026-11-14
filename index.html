@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8">
-<!--build:202611141935-->
-<script>window.BUILD='202611141935';</script>
+<!--build:202611142001-->
+<script>window.BUILD='202611142001';</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4263,7 +4263,8 @@ const Dialog = (function () {
     S.parts.firework(cm.fx + (sx - cm.fx) / z, cm.fy + (sy - cm.fy) / z, null, cm.fy + (H - 14 - cm.fy) / z, true, true);
   }
   // la pareja (David + Marta en una sola imagen generada por PixelLab) : dónde está cada uno en la primera imagen
-  const KISS_Z = 56, MESSI_Z = 18;   // el beso se da delante de Messi, que oficia más atrás sin moverse
+  const KISS_Z = 56, MESSI_Z = 18;   // Messi oficia en el centro, un poco más atrás
+  const MESSI_DX = 96, MESSI_Z2 = 24; // antes del beso se aparta andando a este sitio (a la izquierda de los novios), donde se le ve hasta el final
   function parejaOff(char) { try { return SPR[char].off || { d: -36, m: 17, dz: -3 }; } catch (e) { return { d: -36, m: 17, dz: -3 }; } }
   function parejaKiss(S, d, m, char, x, z) {   // los dos actores dejan paso a la imagen de la pareja, que se besa
     const k = S.add(new Actor(char, x, z, false)); k.shadowW = 70; d.vis = false; m.vis = false; k.play('kiss', 'besando'); return k;
@@ -4597,8 +4598,9 @@ const Dialog = (function () {
         Q.wait(1.2),
         Q.say([B[0]], novio),
         Q.call(function () { messi.vis = true; messi.h = 190; messi.glow = 1; messi.play(MF ? 'arms' : 'bless'); U.sfx('messi'); al.forEach(function (a) { a.emote('excl', 1.2); }); d.emote('excl', 1); m.emote('excl', 1); }),
-        Q.until(function (S2, st) { messi.h = Math.max(0, 190 - st.t * 80); if (((st.t * 60) | 0) % 6 === 0) S.parts.sparks(cx - S.cam.x + U.rand(-24, 24), S.floor - messi.h - 60, 2, ['#fff7c2', '#ffd23a'], 30); return messi.h <= 0; }),
-        Q.call(function () { S.shake(3); al.forEach(function (a, i) { a.hop(120 + i * 10); }); U.sfx('fanfare'); }),
+        // bajada del cielo : la altura la fija este paso (sin gravedad del actor, que lo hacía rebotar al llegar) y frena suavemente al posarse
+        Q.until(function (S2, st) { const k = Math.min(1, st.t / 2.6); messi.h = k >= 1 ? 0 : 190 * (1 - k) * (1 - k * 0.55); messi.vh = 0; if (((st.t * 60) | 0) % 6 === 0) S.parts.sparks(cx - S.cam.x + U.rand(-24, 24), S.floor - messi.h - 60, 2, ['#fff7c2', '#ffd23a'], 30); return messi.h <= 0; }),
+        Q.call(function () { S.shake(2); al.forEach(function (a, i) { a.hop(120 + i * 10); }); U.sfx('fanfare'); }),
         Q.wait(1.0),
         // « ¿Qué mirás, bobo? » : Messi se gira hacia David (a su derecha en la imagen, a la izquierda de la pantalla) y lo mira
         Q.call(function () { al.forEach(function (a) { a.play('idle'); }); messi.shadow = true; messi.h = 0; messi.glow = 0.5;
@@ -4610,12 +4612,18 @@ const Dialog = (function () {
         Q.call(function () { S.parts.hearts(m.x - S.cam.x - 10, S.floor - 70, 5); messi.play('laugh'); }), Q.wait(0.9),
         Q.call(function () { messi.talkOK = true; messi.play('idle'); m.play('idle'); }),
         Q.say([B[3]], novio),
-        // ¡el beso! Messi no se mueve : los novios se juntan delante de él, en primer plano (más abajo en la pantalla)
-        Q.call(function () { messi.talkOK = false; messi.glow = 0.8; messi.play(MF ? 'arms' : 'bless'); self.dz0 = d.z; self.mz0 = m.z;
+        // ¡el beso! Messi se aparta andando hacia un lado (pasa por detrás de David) para que se le siga viendo hasta el final ;
+        // los novios se juntan en el centro, en primer plano
+        Q.call(function () { messi.talkOK = false; messi.glow = 0.8; self.dz0 = d.z; self.mz0 = m.z; self.sz0 = messi.z;
+          if (U.hasChar('messi') && U.hasAnim('messi', 'walk')) {
+            messi.char = 'messi'; messi.play('walk');
+            messi.moveTo(cx - MESSI_DX, 64, function (q) { q.char = MF ? 'messi_f' : 'messi'; q.flip = false; q.play(MF ? 'arms' : 'bless'); });
+          } else messi.play(MF ? 'arms' : 'bless');
           d.moveTo(cx + off.d, 46, function (q) { q.flip = false; }); m.moveTo(cx + off.m, 46, function (q) { q.flip = true; });
           al[2].moveTo(cx + 122, 40, function (q) { q.flip = true; }); al[3].moveTo(cx + 178, 40, function (q) { q.flip = true; }); }),
         Q.until(function (S2, st) { const k = U.ease(Math.min(1, st.t / 1.2)); d.z = self.dz0 + (KISS_Z + off.dz - self.dz0) * k; m.z = self.mz0 + (KISS_Z - self.mz0) * k;
-          return (st.t > 1.2 && d.tx === null && m.tx === null) || st.t > 6; }),
+          messi.z = self.sz0 + (MESSI_Z2 - self.sz0) * k;
+          return (st.t > 1.2 && d.tx === null && m.tx === null && messi.tx === null) || st.t > 6; }),
         Q.wait(0.2),
         Q.call(function () {
           d.talkOK = false; m.talkOK = false;
